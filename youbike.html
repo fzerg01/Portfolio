@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+ @license
+ Copyright 2019 Google LLC. All Rights Reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <title>Add Map</title>
+
+    <style>
+      /**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/* 
+ * Always set the map height explicitly to define the size of the div element
+ * that contains the map. 
+ */
+#map {
+  height: 100%;
+}
+
+/* 
+ * Optional: Makes the sample page fill the window. 
+ */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+      </style>
+    <!-- jsFiddle will insert css and js -->
+  </head>
+  <body>
+    <h3>My Google Maps Demo</h3>
+    <!--The div element for the map -->
+    <div id="map"></div>
+
+    <!-- prettier-ignore -->
+    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({key: "AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg", v: "weekly"});</script>
+  </body>
+</html>
+
+<script>
+    /**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// Initialize and add the map
+let map;
+
+async function initMap() {
+  // 初始化地圖，設定中心為台北市
+  const taipei = { lat: 25.0330, lng: 121.5654 };
+ 
+  // Request needed libraries.
+  //@ts-ignore
+  const { Map } = await google.maps.importLibrary("maps");
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+  // The map, centered at Uluru
+  map = new Map(document.getElementById("map"), {
+    zoom: 14,
+    center: taipei,
+    mapId: "DEMO_MAP_ID",
+  });
+
+  // 載入 YouBike 資料並顯示
+  fetchYouBikeData().then((data) => {
+        data.forEach((station) => {
+        // data.slice(0, 10).forEach((station) => {
+            const marker = new google.maps.Marker({
+                            position: { lat: station.latitude, lng: station.longitude },
+                            map: map,
+                            title: station.sna,
+                            icon: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                        });
+
+                        // 顯示站點資訊
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `
+                                <h3>${station.sna}</h3>
+                                <p>地址：${station.ar}</p>
+                                <p>可借車數：${station.available_rent_bikes}</p>
+                                <p>可還車數：${station.available_return_bikes}</p>
+                            `
+                        });
+
+                        marker.addListener('click', () => {
+                            infoWindow.open(map, marker);
+                        });
+          });
+        });
+
+  // The marker, positioned at Uluru
+  const marker = new AdvancedMarkerElement({
+    map: map,
+    position: taipei,
+    title: "Uluru",
+  });
+}
+
+  // 使用 Fetch API 獲取 YouBike 資料
+  async function fetchYouBikeData() {
+        const response = await fetch(
+            "https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json"
+        );
+        const data = await response.json();
+        return data;
+      }
+
+initMap();
+
+</script>
